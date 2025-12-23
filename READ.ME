@@ -1,0 +1,44 @@
+                   Steps to change one of the program files:
+
+
+This program was written in Turbo Pascal.  To access the compiler, go to the
+SOURCE subdirectory of the SCHEDULE directory.  Enter TURBO at the prompt to
+run Turbo Pascal.  Enter Y to display errors.  Type W for work file and then
+enter the name of the file you want to see (don't enter the .PAS).  Once
+loaded enter E to view the file.  The commands are pretty simple so you don't
+have to be fluent in Pascal to understand the logic behind them.  The only
+programs that are in-depth are ZERO1 and ZERO2 because they contain some
+grueling algorithms.  But I've tried to comment as much in each program
+as possible to make them as understandable as possible.  Once you've made any
+changes enter Ctrl-K, then D to get back to the main menu.  Type R to compile
+the program and run it.  You will be alerted of any errors that take place.
+Once the program works as you want type S from the main menu to save it.  Then
+type O for options from the main menu.  Now enter D and enter FDC for the data
+size and press return.  Now press O and enter 600 for the code size and press
+return.  Enter Q now to go back to the main menu.  Type C to compile the
+program.  Now enter Q to go to dos.  Look at the directory and you will see
+the program you edited with a .COM extender.  Copy the file to the \schedule
+directory and all the changes are complete.  When you run the MAIN file the
+changes will have been made.  Follow these instructions and you won't have any
+problems.
+
+WORKFILE.DAT in the \data directory contains the name of the current workfile.
+Make sure nothing happens to it or the program won't run.  You'll have to
+make a new file on a word processor.  Just the first eight letters of the
+workfile and a return.  Then save it under WORKFILE.DAT.
+
+The \data\main subdirectory contains files only used in the source code
+during compiling.  They don't have to be there unless you want to change
+any of the programs.  Decl.pas and Rdecl.pas contain variable declarations
+that are loaded in at the beginning of some of the programs.  This is so
+if a change is made in one program, its made in every one.  Main.Func
+contains functions used in the programs.  Its only used in one or two.
+The files like getchars, getnum, and getdec are just routines I developed
+to read in characters, numbers, and decimals while looking for the escape
+key so that it can abort.  They also disallow certain characters that could
+distort the input.
+
+If you see a {$I filename.ext} in a program, it means that that particular
+file is loaded into the program when compiled.  They would be one of the three
+files mentioned in the above paragraphed.  They contain file declarations and
+procedures.
