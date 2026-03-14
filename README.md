@@ -39,3 +39,5 @@ If you see a {$I filename.ext} in a program, it means that that particular
 file is loaded into the program when compiled.  They would be one of the three
 files mentioned in the above paragraphed.  They contain file declarations and
 procedures.
+
+This was written in 1990 by Jeoff Krontz for the AAFES Giessen Distribution Center. 
