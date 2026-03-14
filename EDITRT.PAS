@@ -1,5 +1,6 @@
 Program Createnewrouteschedule;  {menu, add and delete routes}
-
+{$M 16384, 0, 0}
+uses CRT, DOS;
 {$I main\decl.pas}        {reading in declarations}
 {$I main\rdecl.pas}
 
@@ -20,23 +21,37 @@ var
   ch : char;
 
 Function Find : word;
-  var f : text;
+  var ft : text;
       s : word;
+      path : string;
   begin
-    assign(f,'data\workfile.dat');
-    reset(f);
-    readln(f,s);
-    close(f);
-    write;
-    find:='data\' + s;
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    assign(ft, path + 'data\workfile.dat');
+    reset(ft);
+    readln(ft, s);
+    close(ft);
+    while (length(s) > 0) and (s[length(s)] <= ' ') do
+      delete(s, length(s), 1);
+    find := path + 'data\' + s;
   end;
 
 Procedure Run(s : word);
-  var g : file;
+  var
+    path : string;
   begin
-    s:=s+'.com';
-    assign(g,s);
-    execute(g);
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    SwapVectors;
+    Exec(path + s + '.exe', '');
+    SwapVectors;
+    if DosError <> 0 then
+      begin
+        writeln('Exec failed, DosError = ', DosError);
+        readln;
+      end;
   end;
 
 Procedure Wait;
@@ -46,8 +61,8 @@ Procedure Wait;
 
 Procedure Waitf;
   begin
-    repeat until keypressed; read(kbd,ch);
-    if keypressed then read(kbd,ch);
+    repeat until keypressed; ch := ReadKey;
+    if keypressed then ch := ReadKey;
   end;
 
 Function ten(i : integer) : integer;
@@ -67,9 +82,9 @@ Procedure Getnumonly(var num : integer; digits : integer);
     repeat
        i:=i+1;
       repeat
-        read(kbd,ch);
+        ch := ReadKey;
         if ch=chr(27) then if not keypressed then quit:=true
-                      else begin read(kbd,ch); if ord(ch)=59 then quit:=true; end;
+                      else begin ch := ReadKey; if ord(ch)=59 then quit:=true; end;
         if ch=chr(8) then if i>1 then begin i:=i-1; write(chr(8),' ',chr(8)); end;
       until quit or (ch in ['0'..'9']) or ((ch=#13) and (i=1));
       if (not quit) and (ch<>#13) then begin val(ch,n[i],dummy); write(n[i]); end;
@@ -90,7 +105,7 @@ Procedure Getchars(var s : word; digits : integer);
     repeat
        i:=i+1;
       repeat
-        read(kbd,ch);
+        ch := ReadKey;
         if ch=chr(27) then if not keypressed then quit:=true;
         if ch=chr(8) then if i>1 then begin i:=i-1; write(chr(8),' ',chr(8)); end;
         if ch=chr(13) then begin boo:=true; digits:=i-1; end;
@@ -156,7 +171,7 @@ Procedure Getdecimal(var num : real; digits : integer; var ret : boolean);
     repeat
        i:=i+1;
       repeat
-        read(kbd,ch);
+        ch := ReadKey;
         if ch=chr(27) then if not keypressed then quit:=true;
         if ch=chr(8) then if i>1 then begin i:=i-1; write(chr(8),' ',chr(8));
                                       if z=i then begin i:=i+1; z:=0; one:=false; end;
@@ -210,23 +225,23 @@ begin
   writeln;
   writeln;
   writeln('                        ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-  writeln('                        ³ Edit a Route''s Information ³');
+  writeln('                        | Edit a Route''s Information |');
   writeln('                        ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´');
-  writeln('                        ³   Route''s Entered :        ³');
+  writeln('                        |   Route''s Entered :        |');
   writeln('                        ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
-  writeln('       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿ ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-  writeln('       ³    Original Information     ³ ³      New Information        ³');
-  writeln('       ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ´ ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ´');
-  writeln('       ³ Route Name        ³         ³ ³ Route Name        ³         ³');
-  writeln('       ³ Hours of Dispatch ³         ³ ³ Hours of Dispatch ³         ³');
-  writeln('       ³ Driving Hours     ³         ³ ³ Driving Hours     ³         ³');
-  writeln('       ³ Days Route Runs   ³         ³ ³ Days Route Runs   ³         ³');
-  writeln('       ³ Days Overnight    ³         ³ ³ Days Overnight    ³         ³');
-  writeln('       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÙ ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÙ');
+  writeln('       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ| ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|');
+  writeln('       |    Original Information     | |      New Information        |');
+  writeln('       ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ| ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ|');
+  writeln('       | Route Name        |         | | Route Name        |         |');
+  writeln('       | Hours of Dispatch |         | | Hours of Dispatch |         |');
+  writeln('       | Driving Hours     |         | | Driving Hours     |         |');
+  writeln('       | Days Route Runs   |         | | Days Route Runs   |         |');
+  writeln('       | Days Overnight    |         | | Days Overnight    |         |');
+  writeln('       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ| ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ|');
   writeln;
-  writeln('       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-  writeln('       ³                                                             ³');
-  writeln('       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
+  writeln('       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|');
+  writeln('       |                                                             |');
+  writeln('       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|');
   repeat
     gotoxy(62,11); write('':7); gotoxy(62,12); write('':7);
     gotoxy(62,14); write('':7); gotoxy(62,15); write('':7);
@@ -289,17 +304,17 @@ begin
     a.overnight:=false;
     a.days:=[];
     writeln; writeln; writeln; writeln; writeln; writeln;
-    writeln('                       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln('                       ³     Add Route to List       ³');
-    writeln('                       ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ´');
-    writeln('                       ³ Route Name        ³         ³');
-    writeln('                       ³ Hours of Dispatch ³         ³');
-    writeln('                       ³ Driving Hours     ³         ³');
-    writeln('                       ³ Days Route Runs   ³         ³');
-    writeln('                       ³ Days Overnight    ³         ³');
-    writeln('                       ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ´');
-    writeln('                       ³                             ³');
-    writeln('                       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
+    writeln('                       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|');
+    writeln('                       |    Add Route to List        |');
+    writeln('                       ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ|');
+    writeln('                       | Route Name        |         |');
+    writeln('                       | Hours of Dispatch |         |');
+    writeln('                       | Driving Hours     |         |');
+    writeln('                       | Days Route Runs   |         |');
+    writeln('                       | Days Overnight    |         |');
+    writeln('                       ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ|');
+    writeln('                       |                             |');
+    writeln('                       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|');
     writeln;
     quit:=false;
     w:='';
@@ -323,8 +338,8 @@ begin
       begin
         l:=frac(j); a.work:=int(j)+(l/0.6);  {converts numbers to real decimal form}
         l:=frac(k); a.drive:=int(k)+(l/0.6);
-        gotoxy(26,16); write('Is all information correct?');
-        repeat wait; read(kbd,ch); until ch in ['y','Y','n','N'];
+        gotoxy(26,16); write('Is all information correct|');
+        repeat wait; ch := ReadKey; until ch in ['y','Y','n','N'];
         if ch in ['y','Y'] then begin write(f,a); quit:=false; end
                            else quit:=false;
       end;
@@ -381,25 +396,25 @@ Procedure Ask(var s : word);
   begin
     clrscr;
     writeln; writeln; writeln; writeln; writeln; writeln;
-    writeln('                       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln('                       ³   Delete Route From List    ³');
-    writeln('                       ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ´');
-    writeln('                       ³ Route Name        ³         ³');
-    writeln('                       ³ Hours of Dispatch ³         ³');
-    writeln('                       ³ Driving Hours     ³         ³');
-    writeln('                       ³ Days Route Runs   ³         ³');
-    writeln('                       ³ Days Overnight    ³         ³');
-    writeln('                       ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ´');
-    writeln('                       ³                             ³');
-    writeln('                       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
+    writeln('                       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|');
+    writeln('                       |   Delete Route From List    |');
+    writeln('                       ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ|');
+    writeln('                       | Route Name        |         |');
+    writeln('                       | Hours of Dispatch |         |');
+    writeln('                       | Driving Hours     |         |');
+    writeln('                       | Days Route Runs   |         |');
+    writeln('                       | Days Overnight    |         |');
+    writeln('                       ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ|');
+    writeln('                       |                             |');
+    writeln('                       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|');
     ask(s);
     if not quit then
         begin
           gotoxy(46,10); writeln(a.route:7); gotoxy(46,11); writeln(a.work:7:2);
           gotoxy(46,12); writeln(a.drive:7:2); gotoxy(46,13); showdays(a.days,true);
           gotoxy(46,14); write(a.overdays:7);
-          clear; write('Delete this route? ');
-          repeat wait; read(kbd,ch); until ch in ['y','Y','n','N'];
+          clear; write('Delete this route (y/n)? ');
+          repeat wait; ch := ReadKey; until ch in ['y','Y','n','N'];
           if ch in ['y','Y'] then begin clear; write('Deleting route...');
                                   pop; delay(500); end;
         end;
@@ -415,30 +430,30 @@ begin
   quit:=false;
   repeat;
     clrscr;
-    writeln('  ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln('  ³              Route Listing - Press any key to continue...             ³');
-    writeln('  ÃÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄ´');
-    writeln('  ³        ³        ³        ³        ³        ³        ³        ³        ³');
-    writeln('  ³        ³        ³        ³        ³        ³        ³        ³        ³');
-    writeln('  ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ´');
-    writeln('  ³        ³        ³        ³        ³        ³        ³        ³        ³');
-    writeln('  ³        ³        ³        ³        ³        ³        ³        ³        ³');
-    writeln('  ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ´');
-    writeln('  ³        ³        ³        ³        ³        ³        ³        ³        ³');
-    writeln('  ³        ³        ³        ³        ³        ³        ³        ³        ³');
-    writeln('  ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ´');
-    writeln('  ³        ³        ³        ³        ³        ³        ³        ³        ³');
-    writeln('  ³        ³        ³        ³        ³        ³        ³        ³        ³');
-    writeln('  ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ´');
-    writeln('  ³        ³        ³        ³        ³        ³        ³        ³        ³');
-    writeln('  ³        ³        ³        ³        ³        ³        ³        ³        ³');
-    writeln('  ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ´');
-    writeln('  ³        ³        ³        ³        ³        ³        ³        ³        ³');
-    writeln('  ³        ³        ³        ³        ³        ³        ³        ³        ³');
-    writeln('  ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ´');
-    writeln('  ³        ³        ³        ³        ³        ³        ³        ³        ³');
-    writeln('  ³        ³        ³        ³        ³        ³        ³        ³        ³');
-    writeln('  ÀÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÙ');
+    writeln('  ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|');
+    writeln('  |             Route Listing - Press any key to continue...              |');
+    writeln('  ÃÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄ|');
+    writeln('  |        |        |        |        |        |        |        |        |');
+    writeln('  |        |        |        |        |        |        |        |        |');
+    writeln('  ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ|');
+    writeln('  |        |        |        |        |        |        |        |        |');
+    writeln('  |        |        |        |        |        |        |        |        |');
+    writeln('  ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ|');
+    writeln('  |        |        |        |        |        |        |        |        |');
+    writeln('  |        |        |        |        |        |        |        |        |');
+    writeln('  ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ|');
+    writeln('  |        |        |        |        |        |        |        |        |');
+    writeln('  |        |        |        |        |        |        |        |        |');
+    writeln('  ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ|');
+    writeln('  |        |        |        |        |        |        |        |        |');
+    writeln('  |        |        |        |        |        |        |        |        |');
+    writeln('  ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ|');
+    writeln('  |        |        |        |        |        |        |        |        |');
+    writeln('  |        |        |        |        |        |        |        |        |');
+    writeln('  ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ|');
+    writeln('  |        |        |        |        |        |        |        |        |');
+    writeln('  |        |        |        |        |        |        |        |        |');
+    writeln('  ÀÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄ|');
     for i:=1 to 7 do
       for j:=1 to 8 do
         begin
@@ -464,17 +479,17 @@ Procedure Mainmenu;
     writeln;
     writeln;
     writeln('                         ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln('                         ³    Route Information   ³');
+    writeln('                         |   Route Information    |');
     writeln('           ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln('           ³                                                      ³');
-    writeln('           ³  1. Edit a route''s information                       ³');
-    writeln('           ³  2. Add new route to list                            ³');
-    writeln('           ³  3. Delete route from list                           ³');
-    writeln('           ³  4. View all routes in list                          ³');
-    writeln('           ³  5. Exit                                             ³');
-    writeln('           ³                                                      ³');
+    writeln('           |                                                      |');
+    writeln('           | 1. Edit a route''s information                        |');
+    writeln('           | 2. Add new route to list                             |');
+    writeln('           | 3. Delete route from list                            |');
+    writeln('           | 4. View all routes in list                           |');
+    writeln('           | 5. Exit                                              |');
+    writeln('           |                                                      |');
     writeln('           ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´');
-    writeln('           ³  Selection :                                         ³');
+    writeln('           | Selection :                                          |');
     writeln('           ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
     repeat getsel(i); until (i in [1..5]) or quit;
     if quit then write('Quit');
@@ -489,11 +504,10 @@ Procedure Mainmenu;
 end;
 
 begin
-  assign(f,find + '.rts');
+  assign(f, find + '.rts');
   reset(f);
   max:=filesize(f);
   mainmenu;
   close(f);
   run('main');
 end.
-

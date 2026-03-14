@@ -1,4 +1,7 @@
 Program Drivers;                {these are all the program variable declarations below}
+{$M 16384, 0, 0}
+uses CRT, DOS;
+
 type                            {the only reason they are here is for the backup part of the program}
   word = string[40];
   line = string[80];
@@ -32,17 +35,17 @@ Procedure Mm;
     writeln;
     writeln;
     writeln('                            ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln('                            ³     Main Menu      ³');
+    writeln('                            |    Main Menu       |');
     writeln('           ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln('           ³                                                      ³');
-    writeln('           ³  1. Route Information                                ³');
-    writeln('           ³  2. Sequence Information                             ³');
-    writeln('           ³  3. Backup Data                                      ³');
-    writeln('           ³  4. Switch Data Files                                ³');
-    writeln('           ³  5. Exit                                             ³');
-    writeln('           ³                                                      ³');
+    writeln('           |                                                      |');
+    writeln('           | 1. Route Information                                 |');
+    writeln('           | 2. Sequence Information                              |');
+    writeln('           | 3. Backup Data                                       |');
+    writeln('           | 4. Switch Data Files                                 |');
+    writeln('           | 5. Exit                                              |');
+    writeln('           |                                                      |');
     writeln('           ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´');
-    writeln('           ³  Selection :                                         ³');
+    writeln('           | Selection :                                          |');
     writeln('           ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
   end;
 
@@ -67,9 +70,9 @@ Procedure Getnumonly(var num : integer; digits : integer);
     repeat
        i:=i+1;
       repeat
-        read(kbd,ch);
+        ch := ReadKey;
         if ch=chr(27) then if not keypressed then quit:=true
-                      else begin read(kbd,ch); if ord(ch)=59 then quit:=true; end;
+                      else begin ch := ReadKey; if ord(ch)=59 then quit:=true; end;
         if ch=chr(8) then if i>1 then begin i:=i-1; write(chr(8),' ',chr(8)); end;
       until quit or (ch in ['0'..'9']);
       if not quit then begin val(ch,n[i],dummy); write(n[i]); end;
@@ -83,16 +86,21 @@ Procedure Getsel(var num : integer);           {waits for menu selection}
     getnumonly(num,1);
   end;
 
-Function Find : word;     {finds out what the workfile is}
-  var f : text;
+Function Find : word;
+  var ft : text;
       s : word;
+      path : string;
   begin
-    assign(f,'data\workfile.dat');
-    reset(f);
-    readln(f,s);
-    close(f);
-    write;
-    find:='data\' + s;
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    assign(ft, path + 'data\workfile.dat');
+    reset(ft);
+    readln(ft, s);
+    close(ft);
+    while (length(s) > 0) and (s[length(s)] <= ' ') do
+      delete(s, length(s), 1);
+    find := path + 'data\' + s;
   end;
 
 Function Find2 : word;  {almost same as above. see below}
@@ -107,28 +115,37 @@ Function Find2 : word;  {almost same as above. see below}
     find2:=s;  {different}
   end;
 
-Procedure Run(s : word);   {runs the next file or menu}
-  var g : file;
+Procedure Run(s : word);
+  var
+    path : string;
   begin
-    s:=s+'.com';
-    assign(g,s);
-    execute(g);
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    SwapVectors;
+    Exec(path + s + '.exe', '');
+    SwapVectors;
+    if DosError <> 0 then
+      begin
+        writeln('Exec failed, DosError = ', DosError);
+        readln;
+      end;
   end;
 
 Procedure Clear;     {clears status line}
   var i : integer;
   begin
-    gotoxy(15,15);
+    gotoxy(14,15);
     for i:=1 to 42 do write(' ');
-    gotoxy(15,15);
+    gotoxy(14,15);
   end;
 
 Procedure Backup;   {backs up files}
   var ch : char; quit : boolean;
   begin
     clear; write('Insert disk for backup files in Drive A');
-    wait; read(kbd,ch);
-    if keypressed then read(kbd,ch);
+    wait; ch := ReadKey;
+    if keypressed then ch := ReadKey;
     if ch<>chr(27) then
       begin
         {$I-}

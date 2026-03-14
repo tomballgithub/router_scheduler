@@ -1,4 +1,6 @@
 Program OptimizeRoutes;
+{$M 65520, 0, 0}
+uses CRT, DOS;
 
 {This is by far the most complex program.  It reads in the routes, then it puts into an array an entry for each day it runs}
 {for each week.  Therefore a route running M,W,F has 6 entries.  Then it takes all these and randomly puts them into }
@@ -11,11 +13,9 @@ Program OptimizeRoutes;
 {the 14 days that are being tried are held in the first fourteen slots of all, which holds all the routes}
 {a random number is chosen from the rest of the array and that route is change with one of the first 14 routes}
 
-
 {Found is a array of 20 that holds three possible values in each slot.  nf=not found. fo=found. o=overnight}
 {these are kept track of after and route change and are used to figure out the status of each day slot while sorting the}
 {routes through the different days.  Only the first 14 slots are used.}
-
 
 const
   weekdrive = 48;
@@ -63,23 +63,37 @@ var
   dtotal,total,week1,dweek1,dweek2,week2,swt,sdt,tw1,td1,sw1,sd1,tw2,td2,sw2,sd2 : real;
 
 Function Find : word;
-  var f : text;
+  var ft : text;
       s : word;
+      path : string;
   begin
-    assign(f,'data\workfile.dat');
-    reset(f);
-    readln(f,s);
-    close(f);
-    write;
-    find:='data\' + s;
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    assign(ft, path + 'data\workfile.dat');
+    reset(ft);
+    readln(ft, s);
+    close(ft);
+    while (length(s) > 0) and (s[length(s)] <= ' ') do
+      delete(s, length(s), 1);
+    find := path + 'data\' + s;
   end;
 
 Procedure Run(s : word);
-  var g : file;
+  var
+    path : string;
   begin
-    s:=s+'.com';
-    assign(g,s);
-    execute(g);
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    SwapVectors;
+    Exec(path + s + '.exe', '');
+    SwapVectors;
+    if DosError <> 0 then
+      begin
+        writeln('Exec failed, DosError = ', DosError);
+        readln;
+      end;
   end;
 
 Procedure Wait;
@@ -103,7 +117,7 @@ Procedure Getdecimal(var num : real; digits : integer);
     repeat
        i:=i+1;
       repeat
-        read(kbd,ch);
+        ch := ReadKey;
         if ch=chr(27) then if not keypressed then quit:=true;
         if ch=chr(8) then if i>1 then begin i:=i-1; write(chr(8),' ',chr(8));
                                       if z=i then begin i:=i+1; z:=0; one:=false; end;
@@ -145,7 +159,7 @@ Procedure Init;  {initializes the variable}
     co[1]:=4; co[2]:=13; co[3]:=24; co[4]:=36; co[5]:=46; co[6]:=56; co[7]:=66;
   end;
 
-Procedure Align(a : alldata; i,j : integer);
+Procedure Align(var a : alldata; i,j : integer);
   var x,y,p : integer;
   begin
     if i<=7 then y:=10 else y:=14;
@@ -175,7 +189,7 @@ Procedure Align(a : alldata; i,j : integer);
       end;
   end;
 
-Procedure Calc2(a : alldata);
+Procedure Calc2(var a : alldata);
   var i : integer;
   begin
     dweek1:=0; dweek2:=0;
@@ -185,7 +199,7 @@ Procedure Calc2(a : alldata);
     total:=week1 + week2; dtotal:=dweek1+dweek2;
   end;
 
-Procedure Showdata(a : alldata);
+Procedure Showdata(var a : alldata);
   var boo : boolean;
       count,i : integer;
   begin
@@ -219,25 +233,25 @@ Procedure Screen;
   begin
     clrscr;
     writeln('                                                   ÚÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln('                                                   ³  Work   ³  Drive   ³');
-    writeln('                                          ÚÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´');
-    writeln('                                          ³ Week 1 :                    ³');
-    writeln(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                     ³ Week 2 :                    ³');
-    writeln(' ³   Sequence       ³                     ³ Total  :                    ³');
+    writeln('                                                   |  Work   |  Drive   |');
+    writeln('                                          ÚÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ|');
+    writeln('                                          | Week 1 :                    |');
+    writeln(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                     | Week 2 :                    |');
+    writeln(' |  Sequence        |                     | Total  :                    |');
     writeln(' ÃÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÁÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄ´');
-    writeln(' ³ Monday ³ Tuesday ³ Wednesday ³ Thursday ³ Friday ³ Saturday ³ Sunday ³');
+    writeln(' | Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday |');
     writeln(' ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ´');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
+    writeln(' |        |         |           |          |        |          |        |');
+    writeln(' |        |         |           |          |        |          |        |');
+    writeln(' |        |         |           |          |        |          |        |');
     writeln(' ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ´');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
+    writeln(' |        |         |           |          |        |          |        |');
+    writeln(' |        |         |           |          |        |          |        |');
+    writeln(' |        |         |           |          |        |          |        |');
     writeln(' ÀÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÙ');
     writeln;
     writeln(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln(' ³                                                                      ³');
+    writeln(' |                                                                      |');
     writeln(' ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
   end;
 
@@ -386,9 +400,14 @@ Procedure Switch(yes : boolean); {this switches between a route of the 1st 14 an
   begin
     if max>(size+1) then
       begin
-        repeat i:=random(max-size)+size+1; until all[i].work<weekwork;
-        repeat j:=random(max-size)+size+1; until all[j].work<weekwork;
+        {repeat i:=random(max-size)+size+1; until all[i].work<weekwork;}
+        {repeat j:=random(max-size)+size+1; until all[j].work<weekwork;}
+		x:=0;
+		repeat i:=random(max-size)+size+1; x:=x+1; until (all[i].work<weekwork) or (x>100);
+		x:=0;
+		repeat j:=random(max-size)+size+1; x:=x+1; until (all[j].work<weekwork) or (x>100);
         r:=all[i];all[i]:=all[j];all[j]:=r;
+
         repeat
           i:=random(size)+1;
           if not yes and ((found[i]=o) or (found[i]=fo)) then i:=0;
@@ -478,6 +497,7 @@ Procedure Remove; {this removes the routes of the last sequence found and moves 
 
 Procedure Readdata; {this reads in route data and assigns slots for each route and week}
   var wk : 1..2;
+  var testdata: text;
   begin
     assign(f,find + '.rts');
     reset(f);
@@ -496,6 +516,8 @@ Procedure Readdata; {this reads in route data and assigns slots for each route a
               end;
           end;
     until eof(f);
+    writeln('finished reading, num=', num);
+    {readln;}
     close(f);
     max:=num; once:=false;
     with blank do
@@ -545,7 +567,8 @@ Procedure Findseq(yes : boolean); {finds a good sequence}
               if loss<=devi then quit:=true;
             end;
         end;
-    until (a>=1000) or quit or exit; {gives it one thousand tries with no better one found before accepting}
+    until (a>=100) or quit or exit; 
+    {until (a>=1000) or quit or exit; {gives it one thousand tries with no better one found before accepting}
     if better then begin found:=tfound; loss:=least; all:=temp; remove; end
               else writeln('Out of routes!!');
   end;
@@ -590,7 +613,7 @@ begin
   getdecimal(devi,4);
   clearline;
   write('This will erase any previously made sequences. Press ESC to abort');
-  wait; read(kbd,ch); if ch=#27 then quit:=true;
+  wait; ch := ReadKey; if ch=#27 then quit:=true;
   clearline;
   if not quit then
     begin

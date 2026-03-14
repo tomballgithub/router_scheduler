@@ -1,5 +1,6 @@
 Program Editroutedata;
-
+{$M 16384, 0, 0}
+uses CRT, DOS;
 {$I main\decl.pas}          {reads in variable declarations}
 {$I main\rdecl.pas}         {"     "      "          "     }
 
@@ -32,24 +33,38 @@ Procedure Calc;                    {calculate the totals of work, driving}
     total:=week1 + week2; dtotal:=dweek1+dweek2;
   end;
 
-Function Findo : word;   {finds workfile}
-  var f : text;
+Function Findo : word;
+  var ft : text;
       s : word;
+      path : string;
   begin
-    assign(f,'data\workfile.dat');
-    reset(f);
-    readln(f,s);
-    close(f);
-    write;
-    findo:='data\' + s;
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    assign(ft, path + 'data\workfile.dat');
+    reset(ft);
+    readln(ft, s);
+    close(ft);
+    while (length(s) > 0) and (s[length(s)] <= ' ') do
+      delete(s, length(s), 1);
+    findo := path + 'data\' + s;
   end;
 
 Procedure Run(s : word);
-  var g : file;
+  var
+    path : string;
   begin
-    s:=s+'.com';
-    assign(g,s);
-    execute(g);
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    SwapVectors;
+    Exec(path + s + '.exe', '');
+    SwapVectors;
+    if DosError <> 0 then
+      begin
+        writeln('Exec failed, DosError = ', DosError);
+        readln;
+      end;
   end;
 
 Function ten(i : integer) : integer;
@@ -83,10 +98,10 @@ Procedure Check(var boo : boolean);  {doesn't let you quit until you've saved or
   var ch : char; done:boolean; i : integer;
   begin
     clear;
-    write('Save changes before quitting? ');
+    write('Save changes before quitting| ');
     repeat
       boo:=true; done:=true;
-      repeat until keypressed; read(kbd,ch); if keypressed then read(kbd,ch);
+      repeat until keypressed; ch := ReadKey; if keypressed then ch := ReadKey;
       if ch in ['y','Y'] then save(a) else
       if ch in ['n','N'] then else
       if ch=chr(27) then boo:=false else done:=false;
@@ -104,8 +119,8 @@ Procedure Waitf(var ch:char; var boo: boolean);
   begin
     boo:=false;                       {waits for function key}
     waitc;
-    read(kbd,ch);
-    if ch=chr(27) then if keypressed then begin read(kbd,ch); boo:=true; end;
+    ch := ReadKey;
+    if ch=chr(27) then if keypressed then begin ch := ReadKey; boo:=true; end;
   end;
 
 Procedure Getnum(var num : integer; digits : integer);
@@ -119,7 +134,7 @@ Procedure Getnum(var num : integer; digits : integer);
     repeat
        i:=i+1;
       repeat
-        read(kbd,ch);
+        ch := ReadKey;
         if ch=chr(27) then if not keypressed then quit:=true;
         if ch=chr(8) then if i>1 then begin i:=i-1; write(chr(8)); end;
         if ch=chr(13) then begin boo:=true; digits:=i-1; end;
@@ -146,7 +161,7 @@ Procedure Getdecimal(var num : real; digits : integer);
     repeat
        i:=i+1;                   {gets a decimal, no chars allowed but '.'}
       repeat
-        read(kbd,ch);
+        ch := ReadKey;
         if ch=chr(27) then if not keypressed then quit:=true;
         if ch=chr(8) then if i>1 then begin i:=i-1; write(chr(8),' ',chr(8));
                                       if z=i then begin i:=i+1; z:=0; one:=false; end;
@@ -172,7 +187,7 @@ Procedure Getchars(var s : word; digits : integer);
     repeat
        i:=i+1;        {gets a string, looks for escapes while typing}
       repeat
-        read(kbd,ch);
+        ch := ReadKey;
         if ch=chr(27) then if not keypressed then quit:=true;
         if ch=chr(8) then if i>1 then begin i:=i-1; write(chr(8),' ',chr(8)); end;
         if ch=chr(13) then begin boo:=true; digits:=i-1; end;
@@ -230,26 +245,26 @@ Procedure Screen;
   begin
     clrscr;
     writeln('                                                   ÚÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln('                                                   ³  Work   ³  Drive   ³');
-    writeln('                                          ÚÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´');
-    writeln('                                          ³ Week 1 :                    ³');
-    writeln(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ Week 2 :                    ³');
-    writeln(' ³   Sequence       ³ Seq. Entered :      ³ Total  :                    ³');
+    writeln('                                                   |  Work   |  Drive   |');
+    writeln('                                          ÚÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ|');
+    writeln('                                          | Week 1 :                    |');
+    writeln(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ Week 2 :                    |');
+    writeln(' |  Sequence        | Seq. Entered :      | Total  :                    |');
     gotoxy(38,6); writeln(filesize(f3));
     writeln(' ÃÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÁÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄ´');
-    writeln(' ³ Monday ³ Tuesday ³ Wednesday ³ Thursday ³ Friday ³ Saturday ³ Sunday ³');
+    writeln(' | Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday |');
     writeln(' ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ´');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
+    writeln(' |        |         |           |          |        |          |        |');
+    writeln(' |        |         |           |          |        |          |        |');
+    writeln(' |        |         |           |          |        |          |        |');
     writeln(' ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ´');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
+    writeln(' |        |         |           |          |        |          |        |');
+    writeln(' |        |         |           |          |        |          |        |');
+    writeln(' |        |         |           |          |        |          |        |');
     writeln(' ÀÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÙ');
     writeln;
     writeln(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln(' ³                                                                      ³');
+    writeln(' |                                                                      |');
     writeln(' ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
   end;
 
@@ -347,14 +362,14 @@ Procedure Input(curr : integer; var changes : boolean);  {gets info about new ro
           begin clear; write('Enter Total Driving Time : '); getdecimal(d,6); end;
         if not quit then
           begin
-            clear; write('Overnight? ');
+            clear; write('Overnight| ');
             repeat
-              repeat until keypressed; read(kbd,ch);
+              repeat until keypressed; ch := ReadKey;
             until ch in ['y','Y','n','N',#13];
             if ch in ['y','Y'] then
               begin
                 on:=true;
-                clear; write('How many days overnight? '); getnum(od,1);
+                clear; write('How many days overnight| '); getnum(od,1);
               end else begin on:=false; od:=0; end;
           end;
         if not quit then

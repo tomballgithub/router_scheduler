@@ -1,5 +1,7 @@
 Program Printsequences;   {prints out sequences}
-{you will see printdrivers referred to.  It is alsways false and not used}
+{$M 16384, 0, 0}
+uses CRT, DOS;
+{you will see printdrivers referred to.  It is always false and not used}
 const
   maxweekdrive = 48.0;         {these are the constants for the maximum hours}
   maxweekwork = 53.5;
@@ -11,11 +13,6 @@ const
 {$I main\decl.pas}
 
 type
-  registers = record        {REGISTERS is something to do with making sure the printer is on}
-    case byte of
-      1 : (AX,BX,CX,DX,BP,SI,DI,DS,ES,Flags : integer);
-      2 : (AL,AH,BL,BH,CL,CH,DL,DH : byte);
-    end;
   rec = record
           week : 1..2;
           day : daytype;
@@ -43,7 +40,8 @@ var
   found : array[1..20] of choice;
   start,finish,new,i,j,seq : integer;
   loss,total,swt,dtotal,week1,dweek1,week2,dweek2 : real;
-
+  lst : text;
+  
 Function Onecase(s : word) : word;
   var
     i : integer;
@@ -66,7 +64,7 @@ Procedure Getchars(var s : word; digits : integer);
     repeat
        i:=i+1;
       repeat
-        read(kbd,ch);
+        ch := ReadKey;
         if ch=chr(27) then if not keypressed then quit:=true;
         if ch=chr(8) then if i>1 then begin i:=i-1; write(chr(8),' ',chr(8)); end;
         if ch=chr(13) then begin boo:=true; digits:=i-1; if digits=0 then quit:=true; end;
@@ -81,13 +79,15 @@ Function CheckPrinter : boolean;
   {this checks whether or not printer is on...
    true  : on
    false : off}
-
+  var
+    reg : Registers;
   begin
-    reg.ah:=2;
-    Intr($17, Reg);
-    CheckPrinter := (Reg.AH and $29) = 0;
+    reg.AH := 2;
+    reg.DX := 0;  {printer port 0 = LPT1}
+    Intr($17, reg);
+    CheckPrinter := (reg.AH and $29) = 0;
   end;
-
+  
 Procedure Calc;
   var i : integer;
   begin
@@ -99,23 +99,37 @@ Procedure Calc;
   end;
 
 Function Find : word;
-  var f : text;
+  var ft : text;
       s : word;
+      path : string;
   begin
-    assign(f,'data\workfile.dat');
-    reset(f);
-    readln(f,s);
-    close(f);
-    write;
-    find:='data\' + s;
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    assign(ft, path + 'data\workfile.dat');
+    reset(ft);
+    readln(ft, s);
+    close(ft);
+    while (length(s) > 0) and (s[length(s)] <= ' ') do
+      delete(s, length(s), 1);
+    find := path + 'data\' + s;
   end;
 
 Procedure Run(s : word);
-  var g : file;
+  var
+    path : string;
   begin
-    s:=s+'.com';
-    assign(g,s);
-    execute(g);
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    SwapVectors;
+    Exec(path + s + '.exe', '');
+    SwapVectors;
+    if DosError <> 0 then
+      begin
+        writeln('Exec failed, DosError = ', DosError);
+        readln;
+      end;
   end;
 
 Procedure Heading;    {prints the heading to the printout}
@@ -194,25 +208,25 @@ Procedure Screen;
   begin
     clrscr;
     writeln('                                                   ÚÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln('                                                   ³  Work   ³  Drive   ³');
-    writeln('                                          ÚÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´');
-    writeln('                                          ³ Week 1 :                    ³');
-    writeln(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                     ³ Week 2 :                    ³');
-    writeln(' ³   Sequence       ³                     ³ Total  :                    ³');
+    writeln('                                                   |  Work   |  Drive   |');
+    writeln('                                          ÚÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ|');
+    writeln('                                          | Week 1 :                    |');
+    writeln(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                     | Week 2 :                    |');
+    writeln(' |  Sequence        |                     | Total  :                    |');
     writeln(' ÃÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÁÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄ´');
-    writeln(' ³ Monday ³ Tuesday ³ Wednesday ³ Thursday ³ Friday ³ Saturday ³ Sunday ³');
+    writeln(' | Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday |');
     writeln(' ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ´');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
+    writeln(' |        |         |           |          |        |          |        |');
+    writeln(' |        |         |           |          |        |          |        |');
+    writeln(' |        |         |           |          |        |          |        |');
     writeln(' ÃÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄ´');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
-    writeln(' ³        ³         ³           ³          ³        ³          ³        ³');
+    writeln(' |        |         |           |          |        |          |        |');
+    writeln(' |        |         |           |          |        |          |        |');
+    writeln(' |        |         |           |          |        |          |        |');
     writeln(' ÀÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÙ');
     writeln;
     writeln(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln(' ³                                                                      ³');
+    writeln(' |                                                                      |');
     writeln(' ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
   end;
 
@@ -267,7 +281,7 @@ Procedure Pon;       {Doesn't start until printer is on}
           clearline;
           write('Printer is not ready.  Please correct and press any key...');
           repeat until keypressed;
-          read(kbd,ch); if keypressed then read(kbd,ch);
+          ch := ReadKey; if keypressed then ch := ReadKey;
           if ch=#27 then quit:=true;
           gotoxy(17,14);
         end;
@@ -318,8 +332,8 @@ Procedure Getorder;
     write('Print (A)ll sequences or (P)artial list of sequences ');
     repeat
       repeat until keypressed;
-      read(kbd,ch);
-      if ch=#27 then if keypressed then read(kbd,ch);
+      ch := ReadKey;
+      if ch=#27 then if keypressed then ch := ReadKey;
       if ch=#27 then quit:=true;
     until (ch in ['a','A','p','P']) or quit;
     if not quit then
@@ -351,6 +365,8 @@ Procedure Getorder;
 
 Procedure Init;
   begin
+	assign(lst, 'LPT1');
+	rewrite(lst);
     new:=0;
     clrscr;
     quit:=false;
@@ -363,8 +379,8 @@ Procedure Init;
     if not quit then
       begin
         write('Align printer and press any key to continue...');
-        repeat until keypressed; read(kbd,ch);
-        if ch=#27 then if keypressed then read(kbd,ch);
+        repeat until keypressed; ch := ReadKey;
+        if ch=#27 then if keypressed then ch := ReadKey;
         if ch=#27 then quit:=true;
         if quit then clearline;
       end;

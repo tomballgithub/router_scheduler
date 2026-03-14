@@ -1,4 +1,6 @@
 Program Zero2;
+{$M 16384, 0, 0}
+uses CRT, DOS;
 
 {this program goes one line at a time from the bottom.  It takes all the routes in that sequence. Then in goes for ten more}
 {sequences and tries to find empty slots.  Then it goes to the top and trades the ones from the bottom sequence for a route}
@@ -64,20 +66,20 @@ Procedure Screen;
     writeln;
     writeln;
     writeln;
-    writeln('              ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln('              ³   Reorganizing Route Schedule   ³  Pass #     ³');
-    writeln('              ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄ´');
-    writeln('              ³                                               ³');
-    writeln('              ³             Current Sequence :                ³');
-    writeln('              ³          Routes left to move :                ³');
-    writeln('              ³      Routes Needed to Insert :                ³');
-    writeln('              ³             Unmovable Routes :                ³');
-    writeln('              ³            Empty Route Slots :                ³');
-    writeln('              ³          Uninsertable Routes :                ³');
-    writeln('              ³                                               ³');
-    writeln('              ÃÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´');
-    writeln('              ³           ³                                   ³');
-    writeln('              ÀÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
+    writeln('              ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄ|');
+    writeln('              |  Reorganizing Route Schedule   | Pass #     |');
+    writeln('              ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄ|');
+    writeln('              |                                              |');
+    writeln('              |            Current Sequence :                |');
+    writeln('              |         Routes left to move :                |');
+    writeln('              |     Routes Needed to Insert :                |');
+    writeln('              |            Unmovable Routes :                |');
+    writeln('              |           Empty Route Slots :                |');
+    writeln('              |         Uninsertable Routes :                |');
+    writeln('              |                                              |');
+    writeln('              ÃÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|');
+    writeln('              |          |                                  |');
+    writeln('              ÀÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|');
   end;
 
 Procedure Showdata;
@@ -131,11 +133,20 @@ Procedure Dofind(row : rows);
   end;
 
 Function Find : word;
-  var f : text;
+  var ft : text;
       s : word;
+      path : string;
   begin
-    assign(f,'data\workfile.dat');
-    reset(f); readln(f,s); close(f); write; find:='data\' + s;
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    assign(ft, path + 'data\workfile.dat');
+    reset(ft);
+    readln(ft, s);
+    close(ft);
+    while (length(s) > 0) and (s[length(s)] <= ' ') do
+      delete(s, length(s), 1);
+    find := path + 'data\' + s;
   end;
 
 Procedure Readin;
@@ -361,11 +372,20 @@ Procedure Makesq;
   end;
 
 Procedure Run(s : word);
-  var g : file;
+  var
+    path : string;
   begin
-    s:=s+'.com';
-    assign(g,s);
-    execute(g);
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    SwapVectors;
+    Exec(path + s + '.exe', '');
+    SwapVectors;
+    if DosError <> 0 then
+      begin
+        writeln('Exec failed, DosError = ', DosError);
+        readln;
+      end;
   end;
 
 begin

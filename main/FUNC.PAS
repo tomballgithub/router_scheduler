@@ -1,9 +1,18 @@
 Procedure Run(s : word);
-  var g : file;
+  var
+    path : string;
   begin
-    s:=s+'.com';
-    assign(g,s);
-    execute(g);
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    SwapVectors;
+    Exec(path + s + '.exe', '');
+    SwapVectors;
+    if DosError <> 0 then
+      begin
+        writeln('Exec failed, DosError = ', DosError);
+        readln;
+      end;
   end;
 
 Procedure Showdata(a : driver); forward;
@@ -86,7 +95,7 @@ Procedure Getnum(var num : integer; digits : integer);
     repeat
        i:=i+1;
       repeat
-        read(kbd,ch);
+        ch := ReadKey;
         if ch=chr(27) then if not keypressed then quit:=true;
         if ch=chr(8) then if i>1 then begin i:=i-1; write(chr(8),' ',chr(8)); end;
         if ch=chr(13) then begin boo:=true; digits:=i-1; end;
@@ -107,7 +116,7 @@ Procedure Getdecimal(var num : real; digits : integer);
     repeat
        i:=i+1;
       repeat
-        read(kbd,ch);
+        ch := ReadKey;
         if ch=chr(27) then if not keypressed then quit:=true;
         if ch=chr(8) then if i>1 then begin i:=i-1; write(chr(8),' ',chr(8));
                                       if z=i then begin i:=i+1; z:=0; one:=false; end;
@@ -133,7 +142,7 @@ Procedure Getchars(var s : word; digits : integer);
     repeat
        i:=i+1;
       repeat
-        read(kbd,ch);
+        ch := ReadKey;
         if ch=chr(27) then if not keypressed then quit:=true;
         if ch=chr(8) then if i>1 then begin i:=i-1; write(chr(8),' ',chr(8)); end;
         if ch=chr(13) then begin boo:=true; digits:=i-1; end;
@@ -155,9 +164,9 @@ Procedure Getnumonly(var num : integer; digits : integer);
     repeat
        i:=i+1;
       repeat
-        read(kbd,ch);
+        ch := ReadKey;
         if ch=chr(27) then if not keypressed then quit:=true
-                      else begin read(kbd,ch); if ord(ch)=59 then quit:=true; end;
+                      else begin ch := ReadKey; if ord(ch)=59 then quit:=true; end;
         if ch=chr(8) then if i>1 then begin i:=i-1; write(chr(8),' ',chr(8)); end;
       until quit or (ch in ['0'..'9']);
       if not quit then begin val(ch,n[i],dummy); write(n[i]); end;
@@ -210,15 +219,15 @@ Procedure Gets(s : line; var t : word; l : integer);
 Procedure Waitf(var ch:char; var boo: boolean; corner : boolean);
   begin
     boo:=false;
-    if corner then waitc else wait; read(kbd,ch);
-    if ch=chr(27) then if keypressed then begin read(kbd,ch); boo:=true; end;
+    if corner then waitc else wait; ch := ReadKey;
+    if ch=chr(27) then if keypressed then begin ch := ReadKey; boo:=true; end;
   end;
 
 Procedure Waitfnoc(var ch:char; var boo: boolean);
   begin
     boo:=false;
-    wait; read(kbd,ch);
-    if ch=chr(27) then if keypressed then begin read(kbd,ch); boo:=true; end;
+    wait; ch := ReadKey;
+    if ch=chr(27) then if keypressed then begin ch := ReadKey; boo:=true; end;
   end;
 
 Procedure Getc(s : line; var ch : char; corner : boolean);
@@ -384,7 +393,7 @@ Procedure Check(var cancel : boolean);
     repeat
       boo:=true;
       clear;
-      getc('Do you want to save the edited data before quitting (y/n)? ',ch,false);
+      getc('Do you want to save the edited data before quitting (y/n)| ',ch,false);
       if ch in ['y','Y'] then begin save; write(ch); end else
       if ch in ['n','N'] then write(ch) else
       if ch=chr(27) then cancel:=false else boo:=false;

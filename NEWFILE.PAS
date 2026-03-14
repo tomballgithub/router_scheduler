@@ -1,4 +1,6 @@
 Program MakeNewDataFile;
+{$M 16384, 0, 0}
+uses CRT, DOS;
 
 {$I main\decl.pas}
 
@@ -28,23 +30,37 @@ var
   f2 : file of rectype;
 
 Procedure Run(s : word);
-  var g : file;
+  var
+    path : string;
   begin
-    s:=s+'.com';
-    assign(g,s);
-    execute(g);
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    SwapVectors;
+    Exec(path + s + '.exe', '');
+    SwapVectors;
+    if DosError <> 0 then
+      begin
+        writeln('Exec failed, DosError = ', DosError);
+        readln;
+      end;
   end;
 
 Function Find : word;
-  var f : text;
+  var ft : text;
       s : word;
+      path : string;
   begin
-    assign(f,'data\workfile.dat');
-    reset(f);
-    readln(f,s);
-    close(f);
-    write;
-    find:=s;
+    path := ParamStr(0);
+    while (length(path) > 0) and (path[length(path)] <> '\') do
+      delete(path, length(path), 1);
+    assign(ft, path + 'data\workfile.dat');
+    reset(ft);
+    readln(ft, s);
+    close(ft);
+    while (length(s) > 0) and (s[length(s)] <= ' ') do
+      delete(s, length(s), 1);
+    find := path + 'data\' + s;
   end;
 
 Procedure Screen;
@@ -58,15 +74,15 @@ Procedure Screen;
     writeln;
     writeln;
     writeln('                            ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-    writeln('                            ³  Change Work File  ³');
-    writeln('                       ÚÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄ¿');
-    writeln('                       ³                              ³');
-    writeln('                       ³   Current File :             ³');
-    writeln('                       ³   New File     :             ³');
-    writeln('                       ³                              ³');
-    writeln('                       ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´');
-    writeln('                       ³                              ³');
-    writeln('                       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
+    writeln('                            | Change Work File   |');
+    writeln('                 ÚÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ¿');
+    writeln('                 |                                          |');
+    writeln('                 |  Current File :                          |');
+    writeln('                 |  New File     :                          |');
+    writeln('                 |                                          |');
+    writeln('                 ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´');
+    writeln('                 |                                          |');
+    writeln('                 ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
   end;
 
 Procedure Wait;
@@ -83,7 +99,7 @@ Procedure Getchars(var s : word; digits : integer);
     repeat
        i:=i+1;
       repeat
-        read(kbd,ch);
+        ch := ReadKey;
         if ch=chr(27) then if not keypressed then quit:=true;
         if ch=chr(8) then if i>1 then begin i:=i-1; write(chr(8),' ',chr(8)); end;
         if ch=chr(13) then begin boo:=true; digits:=i-1; end;
@@ -109,9 +125,9 @@ Function Fileexist(Filename : word) : boolean;
 begin
   quit:=false;
   screen;
-  gotoxy(43,12);
+  gotoxy(36,12);
   writeln(find);
-  gotoxy(43,13);
+  gotoxy(36,13);
   getchars(s,8); {gets name of new workfile}
   r:=s;
   gotoxy(27,16);
@@ -120,11 +136,11 @@ begin
     begin
       if not fileexist('data\'+s+'.rts') then {checks to see if it exists}
         begin
-          write('New File. Ok to Create? ');
+          write('New File. Ok to Create| ');
           repeat
             repeat until keypressed;
-            read(kbd,ch);
-            if ch=#27 then if keypressed then read(kbd,ch);
+            ch := ReadKey;
+            if ch=#27 then if keypressed then ch := ReadKey;
           until ch in ['n','N','y','Y'];
           if ch in ['y','Y'] then quit:=false else quit:=true;
           if not quit then
